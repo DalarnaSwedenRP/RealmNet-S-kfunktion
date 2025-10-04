@@ -1,0 +1,23 @@
+<label for="search">Sök RealmNet:</label>
+<input type="text" id="search" placeholder="Skriv t.ex. polisen.av">
+<button onclick="goToPage()">Gå</button>
+
+<script>
+  const baseURL = "https://realmnet.windskore.se/";
+
+  function goToPage() {
+    const query = document.getElementById("search").value.trim();
+    if(query) {
+      window.location.href = baseURL + query;
+    } else {
+      alert("Skriv något först!");
+    }
+  }
+
+  // Valfritt: låt Enter-tangenten fungera
+  document.getElementById("search").addEventListener("keypress", function(e) {
+    if(e.key === "Enter") {
+      goToPage();
+    }
+  });
+</script>
