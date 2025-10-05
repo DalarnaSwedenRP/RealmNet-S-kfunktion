@@ -1,23 +1,117 @@
-<label for="search">Sök RealmNet:</label>
-<input type="text" id="search" placeholder="Skriv t.ex. polisen.av">
-<button onclick="goToPage()">Gå</button>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealmNet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @keyframes fadeInUp {0% {opacity:0; transform:translateY(50px) scale(0.8);}100% {opacity:1; transform:translateY(0) scale(1);}}
+    @keyframes glowPulse {0%,100%{box-shadow:0 0 10px #3b82f6,0 0 20px #2563eb;}50%{box-shadow:0 0 20px #3b82f6,0 0 40px #2563eb;}}
+    @keyframes openingZoom {0%{opacity:0; transform:scale(0.5);}100%{opacity:1; transform:scale(1);}}
+
+    body {font-family:'Inter',sans-serif; background:linear-gradient(135deg,#0f172a,#1e293b); color:white; overflow-x:hidden; animation:openingZoom 5s ease forwards;}
+    header {position:relative;text-align:center;padding:6rem 1rem 4rem 1rem;overflow:hidden;}
+    header h1 {font-size:4rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(90deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeInUp 1.2s ease forwards;}
+    header p {margin-top:1rem;font-size:1.5rem;color:#cbd5e1;animation:fadeInUp 1.5s ease forwards;}
+    .search-input {width:100%;max-width:400px;padding:1rem 3rem 1rem 1.5rem;border-radius:9999px;border:none;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);color:white;font-size:1rem;box-shadow:0 4px 30px rgba(0,0,0,0.2);transition:all 0.4s ease;}
+    .search-input:focus {outline:none;background:rgba(255,255,255,0.2);box-shadow:0 0 20px #3b82f6,0 0 40px #06b6d4;}
+    #searchResults .result-item {padding:1rem;border-radius:1rem;background:rgba(255,255,255,0.05);backdrop-filter:blur(15px);transition:transform 0.3s ease,box-shadow 0.3s ease;}
+    #searchResults .result-item:hover {transform:scale(1.05);box-shadow:0 0 20px #3b82f6,0 0 40px #06b6d4;}
+    footer {text-align:center;padding:2rem 1rem;font-size:0.9rem;color:#94a3b8;}
+    #particleCanvas {position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.3;}
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+
+<header class="relative z-10">
+    <h1>RealmNet</h1>
+    <p>Sök på exakt vad du vill</p>
+    <div class="mt-8 mx-auto relative">
+        <input type="text" id="searchInput" placeholder="Sök och tryck Enter" class="search-input">
+    </div>
+</header>
+
+<main class="flex flex-col items-center py-12 relative z-10">
+    <div id="searchResults" class="space-y-4 w-full max-w-xl"></div>
+</main>
+
+<footer>
+    Ⓦ 2025 RealmNet
+</footer>
 
 <script>
-  const baseURL = "https://realmnet.windskore.se/";
-
-  function goToPage() {
-    const query = document.getElementById("search").value.trim();
-    if(query) {
-      window.location.href = baseURL + query;
-    } else {
-      alert("Skriv något först!");
+    // --- Partiklar ---
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    const particleCount = 120;
+    class Particle {
+        constructor(){this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height; this.size=Math.random()*3+1; this.speedX=Math.random()*1-0.5; this.speedY=Math.random()*1-0.5; this.color=`hsl(${Math.random()*360},70%,60%)`;}
+        update(){this.x+=this.speedX; this.y+=this.speedY; if(this.x<0||this.x>canvas.width)this.speedX*=-1; if(this.y<0||this.y>canvas.height)this.speedY*=-1;}
+        draw(){ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill();}
     }
-  }
+    for(let i=0;i<particleCount;i++)particles.push(new Particle());
+    function animate(){ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(animate);}
+    animate();
+    window.addEventListener('resize',()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
 
-  // Valfritt: låt Enter-tangenten fungera
-  document.getElementById("search").addEventListener("keypress", function(e) {
-    if(e.key === "Enter") {
-      goToPage();
+    // --- Sökfunktion ---
+    const pages=[
+        { name:"Polismyndigheten", url:"polisen.se.html", keywords:["polisen","polis","polisen.se"] },
+        { name:"RealmNetBanken", url:"RealmNetBanken.se.html", keywords:["realmnetbanken","bank","pengar","banken","money","realmnetbanken.se"] },
+        { name:"SkapaHemsida", url:"skapahemsida.se.html", keywords:["skapa","hemsida","skapahemsida","göra hemsida","egen hemsida","skapahemsida.se"] },
+        { name:"RealmJuristerna", url:"RealmJuristerna.se.html", keywords=["juristerna","advokat","realmjuristerna","advokatbyrå","realmjuristerna.se"] },
+        { name:"RegionRealmNet", url:"RegionRealmNet.se.html", keywords=["region","realmnet","regionrealmnet","hjälp-i-realmnet","regionrealmnet.se"] },
+        { name:"KöpDomän", url:"KöpDomän.se.html", keywords=["domain","köpdomän","domains","köp domän","köpdomän.se"] },
+        { name:"WindMail", url:"WindMail.se.html", keywords=["wind","mail","email","maila","windmail","windmail.se"] },
+        { name:"Hemsidokontroll", url:"hemsidokontroll.se.html", keywords:["hemsida","hemsidor","kontroll","inställningar-över-hemsida","hemsidokontroll","hemsidokontroll.se"] }
+    ];
+    const searchInput=document.getElementById('searchInput');
+    const searchResults=document.getElementById('searchResults');
+    searchInput.addEventListener('keypress',function(e){
+        if(e.key==='Enter'){
+            const query=this.value.trim().toLowerCase().replace(/\.se$/,'');
+            searchResults.innerHTML='';
+            if(!query) return;
+            const exact=pages.find(p=>p.url.replace('.html','').toLowerCase().replace(/\.se$/,'')===query);
+            if(exact){window.location.href=exact.url; return;}
+            const results=pages.filter(p=>{
+                const name=p.name.toLowerCase().replace(/\.se$/,'');
+                const keywords=p.keywords.map(k=>k.toLowerCase().replace(/\.se$/,''));
+                return name.includes(query) || keywords.some(k=>k.includes(query));
+            });
+            if(results.length>0){
+                results.forEach(r=>{
+                    const div=document.createElement('div');
+                    div.className='result-item fadeInUp';
+                    div.innerHTML=`<a href="${r.url}" class="font-semibold text-white hover:text-cyan-400 text-lg">${r.name.replace(/\.se$/,'')}</a>`;
+                    searchResults.appendChild(div);
+                });
+            } else {
+                const div=document.createElement('div');
+                div.className='result-item fadeInUp';
+                div.innerHTML='<p class="text-gray-400">Inga resultat hittades</p>';
+                searchResults.appendChild(div);
+            }
+        }
+    });
+
+    // --- Tvinga F11 fullscreen ---
+    function goFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+        }
     }
-  });
+    document.addEventListener('keydown', e => {
+        if (e.key==='F11') { e.preventDefault(); goFullscreen(); }
+    });
+    window.addEventListener('load',()=>{goFullscreen();});
+    setInterval(()=>{if(!document.fullscreenElement) goFullscreen();},1000);
 </script>
+</body>
+</html>
